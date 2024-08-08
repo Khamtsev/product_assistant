@@ -7,3 +7,7 @@ pytest==6.2.4
 pytest-django==4.4.0
 pytest-pythonpath==0.7.3
 django-filter==23.1
+Pillow==9.0.0
+drf-extra-fields==3.7.0
+djoser==2.1.0
+djangorestframework-simplejwt==4.7.2

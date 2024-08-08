@@ -1,10 +1,79 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 from django.db import models
 
 from recipes.constants import (INGREDIENT_NAME_MAX_LENGTH,
                                MEASURE_UNIT_MAX_LENGTH, TAG_NAME_MAX_LENGTH,
-                               TAG_SLUG_MAX_LENGTH, RECIPE_NAME_MAX_LENGTH)
-User = get_user_model()
+                               TAG_SLUG_MAX_LENGTH, RECIPE_NAME_MAX_LENGTH,
+                               EMAIL_MAX_LENGTH, USERNAME_MAX_LENGTH,
+                               FIRST_NAME_MAX_LENGTH, LAST_NAME_MAX_LENGTH,
+                               PASSWORD_MAX_LENGHT, ROLE_MAX_LENGTH)
+
+USER = 'user'
+ADMIN = 'admin'
+
+
+class MyUser(AbstractUser):
+    ROLES = [
+        ('user', 'User'),
+        ('admin', 'Admin'),
+    ]
+    email = models.EmailField(
+        'Адрес электронной почты',
+        max_length=EMAIL_MAX_LENGTH,
+        unique=True
+    )
+    username = models.CharField(
+        'Уникальный юзернейм',
+        max_length=USERNAME_MAX_LENGTH,
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex=r'^[\w.@+-]+\Z'
+            )
+        ]
+    )
+    first_name = models.CharField(
+        'Имя',
+        max_length=FIRST_NAME_MAX_LENGTH
+    )
+    last_name = models.CharField(
+        'Фамилия',
+        max_length=LAST_NAME_MAX_LENGTH
+    )
+    password = models.CharField(
+        'Пароль',
+        max_length=PASSWORD_MAX_LENGHT
+    )
+    role = models.CharField(
+        'Роль',
+        default='user',
+        choices=ROLES,
+        max_length=ROLE_MAX_LENGTH
+    )
+    avatar = models.ImageField(
+        'Аватар',
+        upload_to='avatars/',
+        blank=True,
+        null=True,
+        default=None
+    )
+
+    @property
+    def is_user(self):
+        return self.role == USER
+
+    @property
+    def is_admin(self):
+        return self.role == ADMIN
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'пользователи'
+
+    def __str__(self):
+        return self.username
 
 
 class Ingredient(models.Model):
@@ -47,7 +116,7 @@ class Tag(models.Model):
 
 class Recipe(models.Model):
     author = models.ForeignKey(
-        User,
+        MyUser,
         related_name='recipes',
         on_delete=models.CASCADE,
         verbose_name='Автор рецепта'
@@ -121,7 +190,7 @@ class RecipeTag(models.Model):
     )
     tag = models.ForeignKey(
         Tag,
-        on_delete=models.SET_NULL,
+        on_delete=models.CASCADE,
         verbose_name='Тег'
     )
 
@@ -139,7 +208,7 @@ class RecipeTag(models.Model):
 
 class ShoppingCart(models.Model):
     user = models.ForeignKey(
-        User,
+        MyUser,
         on_delete=models.CASCADE,
         verbose_name='Пользователь'
     )
@@ -155,7 +224,7 @@ class ShoppingCart(models.Model):
 
 class Favorite(models.Model):
     user = models.ForeignKey(
-        User,
+        MyUser,
         on_delete=models.CASCADE,
         verbose_name='Пользователь'
     )
@@ -172,12 +241,12 @@ class Favorite(models.Model):
 
 class Follow(models.Model):
     user = models.ForeignKey(
-        User,
+        MyUser,
         on_delete=models.CASCADE,
         verbose_name='Пользователь',
     )
     following = models.ForeignKey(
-        User,
+        MyUser,
         on_delete=models.CASCADE,
         related_name='following',
         verbose_name='Подписан на',
