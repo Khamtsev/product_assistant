@@ -1,44 +1,51 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
+from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from djoser.views import UserViewSet
+from recipes.models import Follow, Ingredient, Recipe, ShoppingCart, Tag
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
-from recipes.models import Follow, Ingredient, Recipe, Tag, ShoppingCart
+
+from api.filters import IngredientFilter, RecipeFilter
+from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (ChangePasswordSerializer, CreateUserSerializer,
-                             FollowSerializer, TagSerializer, UserSerializer,
-                             IngredientSerializer, RecipeSerializer,
-                             RecipeCreateSerializer, UserFollowSerializer,
-                             ShoppingCartSerializer, RecipeIngredient)
+                             FollowSerializer, IngredientSerializer,
+                             RecipeCreateSerializer, RecipeIngredient,
+                             RecipeSerializer, ShoppingCartSerializer,
+                             TagSerializer, UserFollowSerializer,
+                             UserSerializer)
 
 User = get_user_model()
 
 
-# class TagViewSet(viewsets.ReadOnlyModelViewSet):
-class TagViewSet(viewsets.ModelViewSet):
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet для тэгов."""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    pagination_class = None
 
 
-# class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
-class IngredientViewSet(viewsets.ModelViewSet):
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet для ингредиентов."""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    pagination_class = None
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
 
 
 class CustomUserViewSet(UserViewSet):
     """ViewSet для пользователей."""
     queryset = User.objects.all()
     permission_classes = (IsAuthenticatedOrReadOnly, )
-    pagination_class = LimitOffsetPagination
+    # pagination_class = LimitOffsetPagination
     http_method_names = ('get', 'post', 'delete', 'head', 'put')
 
     def get_permission(self):
@@ -51,57 +58,35 @@ class CustomUserViewSet(UserViewSet):
             return CreateUserSerializer
         return UserSerializer
 
-    @action(detail=False, methods=['post'], permission_classes=(IsAuthenticated,), url_path='set_password')
+    @action(detail=False, methods=['post'],
+            permission_classes=(IsAuthenticated,), url_path='set_password')
     def set_password(self, request):
         """Изменение пароля."""
-        serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+        serializer = ChangePasswordSerializer(
+            data=request.data, context={'request': request}
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # @action(detail=False, methods=['get'], permission_classes=(IsAuthenticated,))
-    # def me(self, request):
-    #     user = request.user
-    #     serializer = self.get_serializer(user)
-    #     return Response(serializer.data)
+    @action(detail=False, methods=['get'], permission_classes=(IsAuthenticated,))
+    def me(self, request):
+        user = request.user
+        serializer = self.get_serializer(user)
+        return Response(serializer.data)
 
-    # @action(detail=False, methods=['put', 'delete'], permission_classes=(IsAuthenticated,), url_path='me/avatar')
-    # def avatar(self, request):
-    #     user = request.user
-
-    #     if request.method == 'PUT':
-    #         if 'avatar' not in request.data:
-    #             return Response(status=status.HTTP_400_BAD_REQUEST)
-    #         serializer = UserSerializer(user, data=request.data, partial=True)
-    #         if serializer.is_valid():
-    #             serializer.save()
-    #             avatar_url = f"{settings.MEDIA_URL}{serializer.data.get('avatar')}"
-    #             response_data = {"avatar": avatar_url}
-    #             return Response(response_data, status=status.HTTP_200_OK)
-    #         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    #     elif request.method == 'DELETE':
-    #         if not user.avatar:
-    #             return Response({'error': 'Аватар не найден.'}, status=status.HTTP_400_BAD_REQUEST)
-    #         user.avatar.delete(save=True)
-    #         user.avatar = None
-    #         user.save()
-    #         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    @action(detail=False, methods=['put'], permission_classes=(IsAuthenticated,), url_path='me/avatar')
+    @action(detail=False, methods=['put'],
+            permission_classes=(IsAuthenticated,), url_path='me/avatar')
     def avatar(self, request):
         """Обновление аватара."""
         user = request.user
         if 'avatar' not in request.data:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         serializer = UserSerializer(user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            avatar_url = f"{settings.MEDIA_URL}{serializer.data.get('avatar')}"
-            response_data = {"avatar": avatar_url}
-            return Response(response_data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"avatar": user.avatar.url})
 
     @avatar.mapping.delete
     def delete_avatar(self, request):
@@ -114,7 +99,8 @@ class CustomUserViewSet(UserViewSet):
         user.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['get'], permission_classes=(IsAuthenticated,))
+    @action(detail=False, methods=['get'],
+            permission_classes=(IsAuthenticated,))
     def subscriptions(self, request):
         """Подписки пользователя."""
         user = request.user
@@ -163,10 +149,12 @@ class CustomUserViewSet(UserViewSet):
         existing_user = User.objects.filter(email=email).first()
         if existing_user:
             existing_user_serializer = self.get_serializer(existing_user)
-            return Response(existing_user_serializer.data, status=status.HTTP_201_CREATED)
+            return Response(existing_user_serializer.data,
+                            status=status.HTTP_201_CREATED)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.data, status=status.HTTP_201_CREATED,
+                        headers=headers)
 
 
 # class FollowViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
@@ -190,6 +178,10 @@ class CustomUserViewSet(UserViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для рецептов."""
     queryset = Recipe.objects.all()
+    permission_classes = (IsAuthorOrReadOnly,)
+    pagination_class = LimitOffsetPagination
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
@@ -227,7 +219,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_link(self, request, pk=None):
         """Получить коротку ссылку на рецепт."""
         recipe = self.get_object()
-        short_url = f'https://{settings.DOMAIN}/s/{recipe.short_link}'
+        short_url = f'https://{settings.DOMAIN}/api/s/{recipe.short_link}'
         return Response({'short-link': short_url})
 
     @action(detail=True, methods=['post'],
@@ -279,7 +271,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             amount = ingredient['ingredient_amount']
             shopping_cart.append(f'{name}: {amount}, {measurement_unit}\n')
         response = HttpResponse(shopping_cart, content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename="shopping_cart.txt"'
+        response['Content-Disposition'] = 'attachment; filename="shopping.txt"'
         return response
 
 
