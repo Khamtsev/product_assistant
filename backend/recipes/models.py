@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.text import slugify
-
 from recipes.constants import (INGREDIENT_NAME_MAX_LENGTH,
                                MEASURE_UNIT_MAX_LENGTH, RECIPE_NAME_MAX_LENGTH,
                                TAG_NAME_MAX_LENGTH, TAG_SLUG_MAX_LENGTH)
