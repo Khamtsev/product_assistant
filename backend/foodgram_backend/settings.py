@@ -11,7 +11,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', default='secret_token')
 
 DEBUG = os.getenv('DEBUG', default='false').lower() in ('true', '1')
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '')
 
 DOMAIN = os.getenv('DOMAIN', default='test.com')
 # Application definition
