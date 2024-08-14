@@ -11,7 +11,6 @@ router_v1.register('tags', TagViewSet, basename='tags')
 router_v1.register('ingredients', IngredientViewSet, basename='ingredients')
 router_v1.register('recipes', RecipeViewSet, basename='recipes')
 router_v1.register('users', CustomUserViewSet, basename='users')
-# router_v1.register(r'users/(?P<id>\d+)/subscribe', FollowViewSet, basename='subscribe')
 
 urlpatterns = [
     path('', include(router_v1.urls)),

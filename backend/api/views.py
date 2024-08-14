@@ -7,7 +7,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from recipes.models import (Favorite, Follow, Ingredient, Recipe, ShoppingCart,
                             Tag)
-from rest_framework import mixins, status, viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import (IsAuthenticated,
@@ -72,7 +72,8 @@ class CustomUserViewSet(UserViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['get'], permission_classes=(IsAuthenticated,))
+    @action(detail=False, methods=['get'],
+            permission_classes=(IsAuthenticated,))
     def me(self, request):
         user = request.user
         serializer = self.get_serializer(user)
@@ -95,7 +96,8 @@ class CustomUserViewSet(UserViewSet):
         """Удаление аватара."""
         user = request.user
         if not user.avatar:
-            return Response({'error': 'Аватар не найден.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Аватар не найден.'},
+                            status=status.HTTP_400_BAD_REQUEST)
         user.avatar.delete(save=True)
         user.avatar = None
         user.save()
@@ -108,7 +110,8 @@ class CustomUserViewSet(UserViewSet):
         user = request.user
         follows = User.objects.filter(following__user=user)
         page = self.paginate_queryset(follows)
-        serializer = UserFollowSerializer(page, many=True, context={'request': request})
+        serializer = UserFollowSerializer(page, many=True,
+                                          context={'request': request})
         return self.get_paginated_response(serializer.data)
 
     @action(methods=['post'],
@@ -130,7 +133,6 @@ class CustomUserViewSet(UserViewSet):
         serializer = FollowSerializer(
             new_follow, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id):
@@ -158,24 +160,6 @@ class CustomUserViewSet(UserViewSet):
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED,
                         headers=headers)
-
-
-# class FollowViewSet(mixins.CreateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet):
-#     serializer_class = FollowSerializer
-#     pk_url_kwarg = 'id'
-
-#     def get_queryset(self):
-#         user_id = self.request.user.id
-#         return Follow.objects.all().filter(user_id=user_id)
-
-#     def get_object(self, *args, **kwargs):
-#         id = self.kwargs.get('id')
-#         obj = get_object_or_404(User, id=id)
-#         return obj
-
-#     def perform_create(self, serializer):
-#         following = self.get_object()
-#         serializer.save(user=self.request.user, following=following)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
@@ -206,17 +190,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    # def update(self, request, *args, **kwargs):
-    #     instance = self.get_object()
-    #     serializer = RecipeCreateSerializer(
-    #         instance, data=request.data, partial=True,
-    #         context={'request': request}
-    #     )
-    #     if serializer.is_valid():
-    #         serializer.save()
-    #         return Response(serializer.data)
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=['get'], detail=True, url_path='get-link')
     def get_link(self, request, pk=None):
@@ -285,7 +258,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         serializer = FavoriteSerializer(
-            data = {
+            data={
                 'recipe': recipe.id,
                 'user': request.user.id
             },
@@ -294,6 +267,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     @favorite.mapping.delete
     def delete_favorite(self, request, pk=None):
         recipe = self.get_object()

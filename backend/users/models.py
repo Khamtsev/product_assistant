@@ -2,9 +2,10 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
 
-from users.constants import (EMAIL_MAX_LENGTH, USERNAME_MAX_LENGTH,
-                             FIRST_NAME_MAX_LENGTH, LAST_NAME_MAX_LENGTH,
-                             PASSWORD_MAX_LENGHT, ROLE_MAX_LENGTH)
+from users.constants import (EMAIL_MAX_LENGTH, FIRST_NAME_MAX_LENGTH,
+                             LAST_NAME_MAX_LENGTH, PASSWORD_MAX_LENGHT,
+                             ROLE_MAX_LENGTH, USERNAME_MAX_LENGTH)
+
 USER = 'user'
 ADMIN = 'admin'
 
