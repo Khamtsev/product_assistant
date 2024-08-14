@@ -10,3 +10,5 @@ django-filter==23.1
 Pillow==9.0.0
 drf-extra-fields==3.7.0
 djoser==2.1.0
+python-dotenv
+psycopg2-binary==2.9.3

@@ -37,15 +37,15 @@ class IngredientAmountAdmin(admin.ModelAdmin):
 
 
 @admin.register(Follow)
-class SubscriptiontAdmin(admin.ModelAdmin):
+class FollowAdmin(admin.ModelAdmin):
     list_display = ['user', 'following']
 
 
 @admin.register(ShoppingCart)
-class ShoppingListAdmin(admin.ModelAdmin):
-    list_display = ['user', 'recipes']
+class ShoppingCartAdmin(admin.ModelAdmin):
+    list_display = ['user', 'recipe']
 
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ['user', 'recipes']
+    list_display = ['user', 'recipe']
