@@ -24,13 +24,13 @@ services:
 
   frontend:
     env_file: .env
-    image: khamtsev/foogram_frontend
+    image: khamtsev/foodgram_frontend
     command: cp -r /app/build/. /static/
     volumes:
       - static:/static
 
   nginx:
-    image: khamtsev/foodgram_backend_gateway
+    image: khamtsev/foodgram_gateway
     env_file: .env
     ports:
       - 7000:80
