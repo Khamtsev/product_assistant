@@ -1,11 +1,12 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
-from django_filters.rest_framework import DjangoFilterBackend
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
-from recipes.models import Follow, Ingredient, Recipe, ShoppingCart, Tag
+from recipes.models import (Favorite, Follow, Ingredient, Recipe, ShoppingCart,
+                            Tag)
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
@@ -16,11 +17,11 @@ from rest_framework.response import Response
 from api.filters import IngredientFilter, RecipeFilter
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (ChangePasswordSerializer, CreateUserSerializer,
-                             FollowSerializer, IngredientSerializer,
-                             RecipeCreateSerializer, RecipeIngredient,
-                             RecipeSerializer, ShoppingCartSerializer,
-                             TagSerializer, UserFollowSerializer,
-                             UserSerializer)
+                             FavoriteSerializer, FollowSerializer,
+                             IngredientSerializer, RecipeCreateSerializer,
+                             RecipeIngredient, RecipeSerializer,
+                             ShoppingCartSerializer, TagSerializer,
+                             UserFollowSerializer, UserSerializer)
 
 User = get_user_model()
 
@@ -45,8 +46,9 @@ class CustomUserViewSet(UserViewSet):
     """ViewSet для пользователей."""
     queryset = User.objects.all()
     permission_classes = (IsAuthenticatedOrReadOnly, )
-    # pagination_class = LimitOffsetPagination
+    pagination_class = LimitOffsetPagination
     http_method_names = ('get', 'post', 'delete', 'head', 'put')
+    pk_url_kwarg = 'id'
 
     def get_permission(self):
         if self.action == 'me':
@@ -114,20 +116,21 @@ class CustomUserViewSet(UserViewSet):
             permission_classes=(IsAuthenticated,))
     def subscribe(self, request, id):
         """Подписаться на автора."""
-        following = get_object_or_404(User, pk=id)
+        user = request.user
+        following = get_object_or_404(User, id=id)
+        if request.user == following:
+            return Response({
+                'detail': 'Вы не можете подписаться на самого себя.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        if Follow.objects.filter(user=user, following=following).exists():
+            return Response({
+                'detail': 'Вы уже подписаны на этого пользователя.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        new_follow = Follow.objects.create(user=user, following=following)
         serializer = FollowSerializer(
-            data={
-                'user': request.user.id,
-                'following': following.id
-            },
-            context={
-                'request': request,
-                'recipes_limit': request.query_params.get('recipes_limit')
-            }
-        )
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status.HTTP_201_CREATED)
+            new_follow, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
     @subscribe.mapping.delete
     def delete_subscribe(self, request, id):
@@ -139,7 +142,7 @@ class CustomUserViewSet(UserViewSet):
         )
         if follow.exists():
             follow.delete()
-            return Response(status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
     def create(self, request, *args, **kwargs):
@@ -273,6 +276,34 @@ class RecipeViewSet(viewsets.ModelViewSet):
         response = HttpResponse(shopping_cart, content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename="shopping.txt"'
         return response
+
+    @action(
+        methods=['post'],
+        detail=True,
+        permission_classes=(IsAuthenticated,)
+    )
+    def favorite(self, request, pk=None):
+        recipe = get_object_or_404(Recipe, pk=pk)
+        serializer = FavoriteSerializer(
+            data = {
+                'recipe': recipe.id,
+                'user': request.user.id
+            },
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    @favorite.mapping.delete
+    def delete_favorite(self, request, pk=None):
+        recipe = self.get_object()
+        favorite = Favorite.objects.filter(
+            user=request.user, recipe=recipe
+        )
+        if favorite.exists():
+            favorite.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 def recipe_by_short_link(request, short_link):
