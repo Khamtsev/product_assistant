@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404
 from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (Favorite, Follow, Ingredient, Recipe,
@@ -346,6 +347,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 })
         return data
 
+    @atomic
     def create_ingredients(self, ingredients, recipe):
         ingredient_list = []
         for ingredient_data in ingredients:
@@ -361,6 +363,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             )
         RecipeIngredient.objects.bulk_create(ingredient_list)
 
+    @atomic
     def create(self, validated_data):
         ingredients_data = validated_data.pop('recipeingredients', [])
         tags_data = validated_data.pop('tags', [])
