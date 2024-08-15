@@ -179,11 +179,8 @@ class FollowSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        return UserFollowSerializer(instance.following, context=self.context).data
-    # def to_representation(self, instance):
-    #     return UserFollowSerializer(instance.following, context={
-    #         'request': self.context.get('request')
-    #     }).data
+        return UserFollowSerializer(instance.following,
+                                    context=self.context).data
 
 
 class IngredientSerializer(serializers.ModelSerializer):
