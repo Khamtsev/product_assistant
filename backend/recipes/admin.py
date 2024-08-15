@@ -14,13 +14,13 @@ class RecipeAdmin(admin.ModelAdmin):
         'short_link',
     )
     search_fields = ('name', 'author__username')
-    list_filter = ('tags')
+    list_filter = ('tags',)
 
 
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
-    search_fields = ('name')
+    search_fields = ('name',)
 
 
 @admin.register(Tag)
@@ -32,7 +32,7 @@ class TagAdmin(admin.ModelAdmin):
 class IngredientAmountAdmin(admin.ModelAdmin):
     list_display = ('recipe', 'ingredient', 'amount')
     search_fields = ('recipe__name', 'ingredient__name')
-    list_filter = ('recipe')
+    list_filter = ('recipe',)
 
 
 @admin.register(Follow)
