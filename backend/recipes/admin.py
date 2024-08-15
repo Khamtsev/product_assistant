@@ -12,6 +12,7 @@ class RecipeAdmin(admin.ModelAdmin):
         'cooking_time',
         'image',
         'short_link',
+        'tags',
     ]
     search_fields = ['name', 'author__username']
     list_filter = ['tags']
