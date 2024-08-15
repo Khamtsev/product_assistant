@@ -21,6 +21,7 @@ class RecipeAdmin(admin.ModelAdmin):
     def added_in_favorites(self, obj):
         return Favorite.objects.filter(recipe=obj).count()
 
+
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
