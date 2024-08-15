@@ -127,7 +127,7 @@ class UserFollowSerializer(serializers.ModelSerializer):
         recipes = obj.recipes.all()
         if recipes_limit:
             recipes = recipes[:int(recipes_limit)]
-        return RecipeSerializer(recipes, many=True).data
+        return RecipeMiniSerializer(recipes, many=True).data
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -179,9 +179,11 @@ class FollowSerializer(serializers.ModelSerializer):
         return data
 
     def to_representation(self, instance):
-        return UserFollowSerializer(instance.following, context={
-            'request': self.context.get('request')
-        }).data
+        return UserFollowSerializer(instance.following, context=self.context).data
+    # def to_representation(self, instance):
+    #     return UserFollowSerializer(instance.following, context={
+    #         'request': self.context.get('request')
+    #     }).data
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -392,7 +394,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
 
 class RecipeMiniSerializer(serializers.ModelSerializer):
-    """Сериализатор для для отображения рецептов в списке покупок."""
+    """Сериализатор для для отображения рецептов в укороченной форме."""
     class Meta:
         model = Recipe
         fields = (
