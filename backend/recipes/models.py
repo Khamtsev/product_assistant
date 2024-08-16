@@ -1,10 +1,8 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.text import slugify
 from recipes.constants import (INGREDIENT_NAME_MAX_LENGTH,
-                               MEASURE_UNIT_MAX_LENGTH, MIN_AMOUNT,
-                               MIN_COOKING_TIME, RECIPE_NAME_MAX_LENGTH,
+                               MEASURE_UNIT_MAX_LENGTH, RECIPE_NAME_MAX_LENGTH,
                                TAG_NAME_MAX_LENGTH, TAG_SLUG_MAX_LENGTH)
 
 User = get_user_model()
@@ -80,11 +78,7 @@ class Recipe(models.Model):
         verbose_name='Тег'
     )
     cooking_time = models.PositiveIntegerField(
-        'Время приготовления в мин.',
-        validators=[MinValueValidator(
-            MIN_COOKING_TIME,
-            message=f'Минимальное время: {MIN_COOKING_TIME}!'
-        )]
+        'Время приготовления в мин.'
     )
     short_link = models.SlugField(
         'Короткая ссылка',
@@ -123,10 +117,7 @@ class RecipeIngredient(models.Model):
         verbose_name='Ингредиент'
     )
     amount = models.PositiveIntegerField(
-        'Количество',
-        validators=[MinValueValidator(
-            MIN_AMOUNT,
-            message=f'Минимальное количество: {MIN_AMOUNT}!')]
+        'Количество'
     )
 
     class Meta:
