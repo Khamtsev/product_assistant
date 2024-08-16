@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404
-from drf_extra_fields.fields import Base64ImageField
+# from drf_extra_fields.fields import Base64ImageField
+from .utils import Base64ImageField
 from recipes.models import (Favorite, Follow, Ingredient, Recipe,
                             RecipeIngredient, ShoppingCart, Tag)
 from rest_framework import serializers
