@@ -10,7 +10,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', default='secret_token')
 
 DEBUG = os.getenv('DEBUG', default='false').lower() in ('true', '1')
-
+# DEBUG = True
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='test.com').split(',')
 
 DOMAIN = os.getenv('DOMAIN', default='test.com')
@@ -77,7 +77,12 @@ DATABASES = {
         'PORT': os.getenv('DB_PORT', 5432)
     }
 }
-
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators

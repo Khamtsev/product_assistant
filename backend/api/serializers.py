@@ -283,10 +283,10 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipeCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания рецептов."""
     ingredients = IngredientPostSerializer(
-        many=True, source='recipeingredients'
+        many=True, source='recipeingredients', required=True
     )
     tags = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Tag.objects.all()
+        many=True, queryset=Tag.objects.all(), required=True
     )
     image = Base64ImageField(required=True)
 
@@ -301,52 +301,93 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'ingredients'
         )
 
-    def validate(self, data):
-        if data.get('cooking_time') is None or data.get('cooking_time') < 1:
-            raise serializers.ValidationError({
-                'cooking_time': 'Время приготовления должно быть больше 0.'
-            })
-        if not data.get('tags'):
-            raise serializers.ValidationError({
-                'tags': 'Теги должны быть указаны.'
-            })
-        if len(data.get('tags', [])) != len(set(data.get('tags', []))):
-            raise serializers.ValidationError({
-                'tags': 'Теги должны быть уникальными.'
-            })
-        for tag in data.get('tags', []):
+    def validate_image(self, image):
+        if not image:
+            raise serializers.ValidationError(
+                'Изображение должно быть указано.')
+        return image
+
+    def validate_tags(self, tags):
+        if not tags:
+            raise serializers.ValidationError('Теги должны быть указаны.')
+        if len(tags) != len(set(tags)):
+            raise serializers.ValidationError(
+                'Теги должны быть уникальными.'
+            )
+        for tag in tags:
             if not Tag.objects.filter(id=tag.id).exists():
-                raise serializers.ValidationError({
-                    'tags': 'Несуществующий тег.'
-                })
-        if not data.get('image'):
-            raise serializers.ValidationError({
-                'image': 'Изображение должно быть указано.'
-            })
-        ingredients = data.get('recipeingredients', [])
+                raise serializers.ValidationError('Несуществующий тег.')
+        return tags
+
+    def validate_cooking_time(self, cooking_time):
+        if not cooking_time or cooking_time < 1:
+            raise serializers.ValidationError(
+                'Время приготовления должно быть больше 0.')
+        return cooking_time
+
+    def validate_ingredients(self, ingredients):
         if not ingredients:
-            raise serializers.ValidationError({
-                'ingredients': 'Ингредиенты должны быть указаны.'
-            })
+            raise serializers.ValidationError(
+                'Ингредиенты должны быть указаны.')
         ingredient_ids = [ingredient['id'] for ingredient in ingredients]
         if len(ingredient_ids) != len(set(ingredient_ids)):
-            raise serializers.ValidationError({
-                'ingredients': 'Ингредиенты должны быть уникальными.'
-            })
+            raise serializers.ValidationError(
+                'Ингредиенты должны быть уникальными.')
         for ingredient in ingredients:
-            if ingredient.get('amount') <= 0:
-                raise serializers.ValidationError({
-                    'amount': 'Количество ингредиента должно быть больше 0.'
-                })
+            if ingredient.get('amount') < 1:
+                raise serializers.ValidationError(
+                    'Количество ингредиента должно быть больше 0.')
             if not Ingredient.objects.filter(
                 id=ingredient['id']
             ).exists():
-                raise serializers.ValidationError({
-                    'ingredients': 'Несуществующий ингредиент.'
-                })
-        return data
+                raise serializers.ValidationError('Несуществующий ингредиент.')
+        return ingredients
 
-    @atomic
+    # def validate(self, data):
+    #     if data.get('cooking_time') is None or data.get('cooking_time') < 1:
+    #         raise serializers.ValidationError({
+    #             'cooking_time': 'Время приготовления должно быть больше 0.'
+    #         })
+    #     if not data.get('tags'):
+    #         raise serializers.ValidationError({
+    #             'tags': 'Теги должны быть указаны.'
+    #         })
+    #     if len(data.get('tags', [])) != len(set(data.get('tags', []))):
+    #         raise serializers.ValidationError({
+    #             'tags': 'Теги должны быть уникальными.'
+    #         })
+    #     for tag in data.get('tags', []):
+    #         if not Tag.objects.filter(id=tag.id).exists():
+    #             raise serializers.ValidationError({
+    #                 'tags': 'Несуществующий тег.'
+    #             })
+    #     if not data.get('image'):
+    #         raise serializers.ValidationError({
+    #             'image': 'Изображение должно быть указано.'
+    #         })
+    #     ingredients = data.get('recipeingredients', [])
+    #     if not ingredients:
+    #         raise serializers.ValidationError({
+    #             'ingredients': 'Ингредиенты должны быть указаны.'
+    #         })
+    #     ingredient_ids = [ingredient['id'] for ingredient in ingredients]
+    #     if len(ingredient_ids) != len(set(ingredient_ids)):
+    #         raise serializers.ValidationError({
+    #             'ingredients': 'Ингредиенты должны быть уникальными.'
+    #         })
+    #     for ingredient in ingredients:
+    #         if ingredient.get('amount') <= 0:
+    #             raise serializers.ValidationError({
+    #                 'amount': 'Количество ингредиента должно быть больше 0.'
+    #             })
+    #         if not Ingredient.objects.filter(
+    #             id=ingredient['id']
+    #         ).exists():
+    #             raise serializers.ValidationError({
+    #                 'ingredients': 'Несуществующий ингредиент.'
+    #             })
+    #     return data
+
     def create_ingredients(self, ingredients, recipe):
         ingredient_list = []
         for ingredient_data in ingredients:
@@ -374,13 +415,28 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         self.create_ingredients(ingredients_data, recipe)
         return recipe
 
+    @atomic
+    # def update(self, instance, validated_data):
+    #     ingredients_data = validated_data.pop('recipeingredients', [])
+    #     tags_data = validated_data.pop('tags', [])
+    #     instance = super().update(instance, validated_data)
+    #     instance.tags.set(tags_data)
+    #     instance.ingredients.clear()
+    #     self.create_ingredients(ingredients_data, instance)
+    #     return instance
     def update(self, instance, validated_data):
-        ingredients_data = validated_data.pop('recipeingredients', [])
-        tags_data = validated_data.pop('tags', [])
-        instance = super().update(instance, validated_data)
-        instance.tags.set(tags_data)
-        instance.ingredients.clear()
-        self.create_ingredients(ingredients_data, instance)
+        instance.image = validated_data.get('image', instance.image)
+        instance.name = validated_data.get('name', instance.name)
+        instance.text = validated_data.get('text', instance.text)
+        instance.cooking_time = validated_data.get('cooking_time',
+                                                   instance.cooking_time)
+        ingredients_data = validated_data.get('recipeingredients', [])
+        if ingredients_data:
+            instance.ingredients.clear()
+            self.create_ingredients(ingredients_data, instance)
+        tags_data = validated_data.get('tags', [])
+        if tags_data:
+            instance.tags.set(tags_data)
         return instance
 
     def to_representation(self, instance):
