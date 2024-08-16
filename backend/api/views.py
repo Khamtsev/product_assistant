@@ -190,6 +190,17 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = RecipeCreateSerializer(
+            instance, data=request.data, partial=True,
+            context={'request': request}
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     @action(methods=['get'], detail=True, url_path='get-link')
     def get_link(self, request, pk=None):
         """Получить коротку ссылку на рецепт."""
