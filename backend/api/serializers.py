@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from recipes.models import (Favorite, Follow, Ingredient, Recipe,
                             RecipeIngredient, ShoppingCart, Tag)
 from rest_framework import serializers
+
 from .utils import Base64ImageField
 
 User = get_user_model()
