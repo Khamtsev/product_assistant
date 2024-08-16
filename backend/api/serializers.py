@@ -196,7 +196,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 class IngredientPostSerializer(serializers.ModelSerializer):
     """Сериализатор ингредиентов при создании рецепта."""
-    id = serializers.IntegerField()
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
     amount = serializers.IntegerField()
 
     class Meta:
