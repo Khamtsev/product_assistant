@@ -373,20 +373,29 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         self.create_ingredients(ingredients_data, recipe)
         return recipe
 
+    # @atomic
+    # def update(self, instance, validated_data):
+    #     instance.image = validated_data.get('image', instance.image)
+    #     instance.name = validated_data.get('name', instance.name)
+    #     instance.text = validated_data.get('text', instance.text)
+    #     instance.cooking_time = validated_data.get('cooking_time',
+    #                                                instance.cooking_time)
+    #     ingredients_data = validated_data.pop('recipeingredients', [])
+    #     if ingredients_data:
+    #         instance.ingredients.clear()
+    #         self.create_ingredients(ingredients_data, instance)
+    #     tags_data = validated_data.pop('tags', [])
+    #     if tags_data:
+    #         instance.tags.set(tags_data)
+    #     return instance
     @atomic
     def update(self, instance, validated_data):
-        instance.image = validated_data.get('image', instance.image)
-        instance.name = validated_data.get('name', instance.name)
-        instance.text = validated_data.get('text', instance.text)
-        instance.cooking_time = validated_data.get('cooking_time',
-                                                   instance.cooking_time)
         ingredients_data = validated_data.pop('recipeingredients', [])
-        if ingredients_data:
-            instance.ingredients.clear()
-            self.create_ingredients(ingredients_data, instance)
         tags_data = validated_data.pop('tags', [])
-        if tags_data:
-            instance.tags.set(tags_data)
+        instance = super().update(instance, validated_data)
+        instance.tags.set(tags_data)
+        instance.ingredients.clear()
+        self.create_ingredients(ingredients_data, instance)
         return instance
 
     def to_representation(self, instance):
