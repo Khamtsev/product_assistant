@@ -346,7 +346,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 })
         return data
 
-    @atomic
     def create_ingredients(self, ingredients, recipe):
         ingredient_list = []
         for ingredient_data in ingredients:
@@ -374,6 +373,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         self.create_ingredients(ingredients_data, recipe)
         return recipe
 
+    @atomic
     def update(self, instance, validated_data):
         instance.image = validated_data.get('image', instance.image)
         instance.name = validated_data.get('name', instance.name)
