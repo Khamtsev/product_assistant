@@ -9,7 +9,7 @@ class Command(BaseCommand):
     help = 'Импортирование ингредиентов из ingredients.json'
 
     def handle(self, *args, **options):
-        file_path = f'{settings.IMPORT_FOLDER}/ingredients.json'
+        file_path = f'data/ingredients.json'
 
         with open(file_path, 'r', encoding='utf-8') as file:
             ingredients = json.load(file)
