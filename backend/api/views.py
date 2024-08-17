@@ -14,6 +14,7 @@ from rest_framework.permissions import (IsAuthenticated,
                                         IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
 from api.filters import IngredientFilter, RecipeFilter
+from api.pagination import CustomPagination
 from api.permissions import IsAuthorOrReadOnly
 from api.serializers import (ChangePasswordSerializer, CreateUserSerializer,
                              FavoriteSerializer, FollowSerializer,
@@ -45,7 +46,7 @@ class CustomUserViewSet(UserViewSet):
     """ViewSet для пользователей."""
     queryset = User.objects.all()
     permission_classes = (IsAuthenticatedOrReadOnly, )
-    pagination_class = LimitOffsetPagination
+    pagination_class = CustomPagination
     http_method_names = ('get', 'post', 'delete', 'head', 'put')
     pk_url_kwarg = 'id'
 
@@ -165,7 +166,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """ViewSet для рецептов."""
     queryset = Recipe.objects.all()
     permission_classes = (IsAuthorOrReadOnly,)
-    pagination_class = LimitOffsetPagination
+    pagination_class = CustomPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
