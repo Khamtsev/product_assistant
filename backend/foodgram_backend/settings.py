@@ -14,6 +14,7 @@ DEBUG = os.getenv('DEBUG', default='false').lower() in ('true', '1')
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='test.com').split(',')
 
 DOMAIN = os.getenv('DOMAIN', default='test.com')
+IMPORT_FOLDER = os.path.join(BASE_DIR, 'data')
 # Application definition
 
 INSTALLED_APPS = [
