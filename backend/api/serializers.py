@@ -211,6 +211,7 @@ class IngredientPostSerializer(serializers.ModelSerializer):
 
 class IngredientGetSerializer(serializers.ModelSerializer):
     """Сериализатор для отображения ингредиентов в рецепте."""
+    id = serializers.IntegerField(source='ingredient.id')
     name = serializers.CharField(source='ingredient.name', read_only=True)
     measurement_unit = serializers.CharField(
         source='ingredient.measurement_unit', read_only=True
@@ -285,7 +286,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipeCreateSerializer(serializers.ModelSerializer):
     """Сериализатор для создания рецептов."""
     ingredients = IngredientPostSerializer(
-        many=True, source='recipeingredients', required=True
+        many=True, required=True
     )
     tags = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Tag.objects.all(), required=True
@@ -367,7 +368,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     #         raise serializers.ValidationError({
     #             'image': 'Изображение должно быть указано.'
     #         })
-    #     ingredients = data.get('recipeingredients', [])
+    #     ingredients = data.get('ingredients', [])
     #     if not ingredients:
     #         raise serializers.ValidationError({
     #             'ingredients': 'Ингредиенты должны быть указаны.'
@@ -407,7 +408,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     @atomic
     def create(self, validated_data):
-        ingredients_data = validated_data.pop('recipeingredients', [])
+        ingredients_data = validated_data.pop('ingredients', [])
         tags_data = validated_data.pop('tags', [])
         recipe = Recipe.objects.create(
             author=self.context['request'].user,
@@ -419,20 +420,27 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     @atomic
     # def update(self, instance, validated_data):
-    #     ingredients_data = validated_data.pop('recipeingredients', [])
+    #     ingredients_data = validated_data.pop('ingredients', [])
     #     tags_data = validated_data.pop('tags', [])
     #     instance = super().update(instance, validated_data)
     #     instance.tags.set(tags_data)
     #     instance.ingredients.clear()
     #     self.create_ingredients(ingredients_data, instance)
     #     return instance
+    # def update(self, instance, validated_data):
+    #     instance.tags.clear()
+    #     instance.tags.set(validated_data.pop('tags'))
+    #     instance.ingredients.clear()
+    #     ingredients = validated_data.pop('ingredients')
+    #     self.create_ingredients(instance, ingredients)
+    #     return super().update(instance, validated_data)
     def update(self, instance, validated_data):
         instance.image = validated_data.get('image', instance.image)
         instance.name = validated_data.get('name', instance.name)
         instance.text = validated_data.get('text', instance.text)
         instance.cooking_time = validated_data.get('cooking_time',
                                                    instance.cooking_time)
-        ingredients_data = validated_data.get('recipeingredients', [])
+        ingredients_data = validated_data.get('ingredients', [])
         if ingredients_data:
             instance.ingredients.clear()
             self.create_ingredients(ingredients_data, instance)
