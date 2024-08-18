@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db.transaction import atomic
 from django.shortcuts import get_object_or_404
-# from drf_extra_fields.fields import Base64ImageField
 from recipes.models import (Favorite, Follow, Ingredient, Recipe,
                             RecipeIngredient, ShoppingCart, Tag)
 from rest_framework import serializers
@@ -346,51 +345,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError('Несуществующий ингредиент.')
         return ingredients
 
-    # def validate(self, data):
-    #     if data.get('cooking_time') is None or data.get('cooking_time') < 1:
-    #         raise serializers.ValidationError({
-    #             'cooking_time': 'Время приготовления должно быть больше 0.'
-    #         })
-    #     if not data.get('tags'):
-    #         raise serializers.ValidationError({
-    #             'tags': 'Теги должны быть указаны.'
-    #         })
-    #     if len(data.get('tags', [])) != len(set(data.get('tags', []))):
-    #         raise serializers.ValidationError({
-    #             'tags': 'Теги должны быть уникальными.'
-    #         })
-    #     for tag in data.get('tags', []):
-    #         if not Tag.objects.filter(id=tag.id).exists():
-    #             raise serializers.ValidationError({
-    #                 'tags': 'Несуществующий тег.'
-    #             })
-    #     if not data.get('image'):
-    #         raise serializers.ValidationError({
-    #             'image': 'Изображение должно быть указано.'
-    #         })
-    #     ingredients = data.get('ingredients', [])
-    #     if not ingredients:
-    #         raise serializers.ValidationError({
-    #             'ingredients': 'Ингредиенты должны быть указаны.'
-    #         })
-    #     ingredient_ids = [ingredient['id'] for ingredient in ingredients]
-    #     if len(ingredient_ids) != len(set(ingredient_ids)):
-    #         raise serializers.ValidationError({
-    #             'ingredients': 'Ингредиенты должны быть уникальными.'
-    #         })
-    #     for ingredient in ingredients:
-    #         if ingredient.get('amount') <= 0:
-    #             raise serializers.ValidationError({
-    #                 'amount': 'Количество ингредиента должно быть больше 0.'
-    #             })
-    #         if not Ingredient.objects.filter(
-    #             id=ingredient['id']
-    #         ).exists():
-    #             raise serializers.ValidationError({
-    #                 'ingredients': 'Несуществующий ингредиент.'
-    #             })
-    #     return data
-
     def create_ingredients(self, ingredients, recipe):
         ingredient_list = []
         for ingredient_data in ingredients:
@@ -419,14 +373,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return recipe
 
     @atomic
-    # def update(self, instance, validated_data):
-    #     ingredients_data = validated_data.pop('ingredients', [])
-    #     tags_data = validated_data.pop('tags', [])
-    #     instance = super().update(instance, validated_data)
-    #     instance.tags.set(tags_data)
-    #     instance.ingredients.clear()
-    #     self.create_ingredients(ingredients_data, instance)
-    #     return instance
     def update(self, instance, validated_data):
         instance.image = validated_data.get('image', instance.image)
         instance.name = validated_data.get('name', instance.name)

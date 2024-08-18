@@ -14,3 +14,13 @@ class Base64ImageField(serializers.ImageField):
             id = uuid.uuid4()
             data = ContentFile(base64.b64decode(imgstr), name=f"{id}.{ext}")
         return super().to_internal_value(data)
+
+
+def generate_shopping_cart(ingredients):
+    shopping_cart = []
+    for ingredient in ingredients:
+        name = ingredient['ingredient__name']
+        measurement_unit = ingredient['ingredient__measurement_unit']
+        amount = ingredient['ingredient_amount']
+        shopping_cart.append(f'{name}: {amount}, {measurement_unit}\n')
+    return shopping_cart

@@ -21,6 +21,7 @@ from api.serializers import (ChangePasswordSerializer, CreateUserSerializer,
                              RecipeIngredient, RecipeSerializer,
                              ShoppingCartSerializer, TagSerializer,
                              UserFollowSerializer, UserSerializer)
+from api.utils import generate_shopping_cart
 
 User = get_user_model()
 
@@ -239,12 +240,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).values(
             'ingredient__name', 'ingredient__measurement_unit'
         ).annotate(ingredient_amount=Sum('amount'))
-        shopping_cart = []
-        for ingredient in ingredients:
-            name = ingredient['ingredient__name']
-            measurement_unit = ingredient['ingredient__measurement_unit']
-            amount = ingredient['ingredient_amount']
-            shopping_cart.append(f'{name}: {amount}, {measurement_unit}\n')
+        shopping_cart = generate_shopping_cart(ingredients)
         response = HttpResponse(shopping_cart, content_type='text/plain')
         response['Content-Disposition'] = 'attachment; filename="shopping.txt"'
         return response
