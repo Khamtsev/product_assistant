@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils.text import slugify
@@ -236,11 +237,12 @@ class Follow(models.Model):
             models.UniqueConstraint(
                 fields=['user', 'following'],
                 name='unique_user_following'
-            ),
-            models.CheckConstraint(
-                check=~models.Q(user=models.F('following')),
-                name='user_and_following_different'
-            ),
+            )
         ]
         verbose_name = 'Подписки'
         verbose_name_plural = 'подписки'
+
+    def clean(self):
+        if self.user == self.following:
+            raise ValidationError('Вы не можете подписаться на самого себя!')
+        return super().clean()
