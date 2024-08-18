@@ -1,12 +1,28 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.admin import display
 from recipes.models import (Favorite, Follow, Ingredient, Recipe,
                             RecipeIngredient, ShoppingCart, Tag)
 
 
+class IngredientsInRecipeInlineFormset(forms.models.BaseInlineFormSet):
+    def clean(self):
+        count = 0
+        for form in self.forms:
+            try:
+                if form.cleaned_data and not form.cleaned_data.get('DELETE',
+                                                                   False):
+                    count += 1
+            except AttributeError:
+                pass
+        if count < 1:
+            raise forms.ValidationError('Выберите хотя бы один ингредиент')
+
+
 class RecipeIngredientInline(admin.TabularInline):
     model = RecipeIngredient
     extra = 1
+    formset = IngredientsInRecipeInlineFormset
 
 
 @admin.register(Recipe)
