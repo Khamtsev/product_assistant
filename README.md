@@ -30,7 +30,7 @@ sudo docker compose -f docker-compose.production.yml exec backend python manage.
 ### Примеры запросов
 1. Получение списка рецептов: \
    **GET** `/api/recipes/` \
-   REQUEST
+   RESPONSE
    ```json
    {
      "count": 123,
@@ -72,9 +72,9 @@ sudo docker compose -f docker-compose.production.yml exec backend python manage.
      ]
    }
    ```
-2. Регистрация пользователя: \
+3. Регистрация пользователя: \
    **POST** `/api/users/` \
-   RESPONSE
+   REQUEST
    ```json
    {
      "email": "ivan@ivan.com",
@@ -84,7 +84,7 @@ sudo docker compose -f docker-compose.production.yml exec backend python manage.
      "password": "super_password1"
    }
    ```
-   REQUEST
+   RESPONSE
    ```json
    {
    "email": "ivan@ivan.com",
@@ -94,9 +94,9 @@ sudo docker compose -f docker-compose.production.yml exec backend python manage.
    "last_name": "Ivanonv"
    }
    ```
-3. Подписаться на пользователя: \
+4. Подписаться на пользователя: \
    **POST** `/api/users/{id}/subscribe/`
-   REQUEST
+   RESPONSE
    ```json
    {
      "email": "ivan@ivan.com",
