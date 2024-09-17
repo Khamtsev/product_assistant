@@ -95,7 +95,7 @@ sudo docker compose -f docker-compose.production.yml exec backend python manage.
    }
    ```
 4. Подписаться на пользователя: \
-   **POST** `/api/users/{id}/subscribe/`
+   **POST** `/api/users/{id}/subscribe/` \
    RESPONSE
    ```json
    {
